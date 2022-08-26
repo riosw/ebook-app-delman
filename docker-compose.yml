@@ -4,6 +4,8 @@ services:
     build: .
     ports:
       - 8000:5000
+    depends_on:
+      - psql-db
   psql-db:
     image: postgres:11-alpine
     restart: always
@@ -13,8 +15,8 @@ services:
     ports:
       - '5432:5432'
     volumes: 
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - psql-db:/var/lib/postgresql/data
 
 volumes:
   psql-db:
-    driver: local
