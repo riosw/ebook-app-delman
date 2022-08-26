@@ -1,6 +1,6 @@
-from crypt import methods
 from . import create_app
-from .models import db, Ebook
+from flask import jsonify
+from .models import Ebook
 
 app = create_app()
 
@@ -10,4 +10,8 @@ def hello_world():
 
 @app.route('/ebook', methods=["GET"])
 def getEbook():
+    return jsonify(Ebook.query.all())
+
+@app.route('/ebook', methods=["POST"])
+def postEbook():
     return Ebook.query.all()

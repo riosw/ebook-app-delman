@@ -12,7 +12,7 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-ENV FLASK_APP=app
+ENV FLASK_APP=flaskr/app
 ENV FLASK_ENV=development
 
 ENV POSTGRES_USER=postgres

@@ -5,8 +5,6 @@ db = SQLAlchemy()
 class Ebook(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     judul = db.Column(db.Text())
-    # penulis
-    # sinopsis
-    # harga
-    # image_url
-    # content_url
+
+    def __repr__(self) -> str:
+        return f'Ebook<id={self.id},judul={self.judul}>'
