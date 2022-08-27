@@ -1,11 +1,12 @@
 from . import create_app, bcrypt, db
 from .models import Ebook, Staff
-from .schema import EbookSchema
+from .schema import EbookSchema, StaffSchema
 
 from http import HTTPStatus
 from flask import Response, request, jsonify
 from flask_login import login_user, current_user, login_required, logout_user
-
+from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import UniqueViolation
 
 app = create_app()
 
@@ -26,7 +27,12 @@ def getEbookWithID(id):
 @app.route("/admin/register", methods=["POST"])
 def adminRegister():
     try:
+        errors = StaffSchema().validate(request.args)
+        if errors:
+            return Response(f'{errors}', status=HTTPStatus.BAD_REQUEST)
+        
         hashed_password = bcrypt.generate_password_hash(request.args.get('password')).decode('utf-8')
+        
         staff = Staff(
             name=request.args.get('name'),
             email=request.args.get('email'),
@@ -34,9 +40,13 @@ def adminRegister():
             address=request.args.get('address'),
             password=hashed_password
         )
+
         db.session.add(staff)
         db.session.commit()
     except Exception as err:
+        if isinstance(err, IntegrityError) and isinstance(err.orig, UniqueViolation):
+            return Response(f'This email already exists', status=HTTPStatus.BAD_REQUEST)
+
         return Response(f'{err}', status=HTTPStatus.BAD_REQUEST)
 
     return Response("Registration success", status=HTTPStatus.OK)

@@ -25,7 +25,7 @@ def create_app():
     app.app_context().push()
     db.init_app(app)
     db.create_all()
-    migrate.init_app(db)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     bcrypt.init_app(app)
     ma.init_app(app)
