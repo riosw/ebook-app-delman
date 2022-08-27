@@ -1,6 +1,6 @@
 from . import create_app, bcrypt, db, login_manager
-from .models import Ebook, User, UserTypes
-from .schema import EbookSchema, UserSchema
+from .models import Ebook, User, UserTypes, Order
+from .schema import EbookSchema, UserSchema, OrderSchema
 
 from http import HTTPStatus
 from flask import Response, request, jsonify
@@ -69,25 +69,25 @@ def userRegister(userType: UserTypes) -> Response:
     Returns:
         Response
     """
-    userArgs = request.args.to_dict()
-    userArgs['role'] = userType.value
-
-    errors = UserSchema().validate(userArgs)
-    if errors:
-        return Response(f'{errors}', status=HTTPStatus.BAD_REQUEST)
-    
-    hashed_password = bcrypt.generate_password_hash(userArgs.get('password')).decode('utf-8')
-    
-    staff = User(
-        name=userArgs.get('name'),
-        email=userArgs.get('email'),
-        phone_number=userArgs.get('phone_number'),
-        address=userArgs.get('address'),
-        password=hashed_password,
-        role=userArgs.get('role')
-    )
-
     try:
+        userArgs = request.args.to_dict()
+        userArgs['role'] = userType.value
+
+        errors = UserSchema().validate(userArgs)
+        if errors:
+            return Response(f'{errors}', status=HTTPStatus.BAD_REQUEST)
+        
+        hashed_password = bcrypt.generate_password_hash(userArgs.get('password')).decode('utf-8')
+        
+        staff = User(
+            name=userArgs.get('name'),
+            email=userArgs.get('email'),
+            phone_number=userArgs.get('phone_number'),
+            address=userArgs.get('address'),
+            password=hashed_password,
+            role=userArgs.get('role')
+        )
+
         db.session.add(staff)
         db.session.commit()
     except Exception as err:
@@ -95,8 +95,8 @@ def userRegister(userType: UserTypes) -> Response:
             return Response(f'This email already exists', status=HTTPStatus.BAD_REQUEST)
 
         return Response(f'{err}', status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    finally:
-        return Response("Registration success", status=HTTPStatus.OK)
+    
+    return Response("Registration success", status=HTTPStatus.OK)
 
 @app.route("/admin/register", methods=["POST"])
 def adminRegister():
@@ -195,6 +195,29 @@ def deleteEbookWithIDAsAdmin(id):
     return Response(status=HTTPStatus.NOT_FOUND)
 
 # Customer Orders Management
+@app.route("/customer/orders", methods=["GET"])
+@role_required(UserTypes.customer)
+def getCustomerOrders():
+    orders = Order.query.filter_by(customer_id=current_user.id).all()
+    return jsonify(OrderSchema(many=True).dump(orders))
+
+@app.route("/order", methods=["POST"])
+@role_required(UserTypes.customer)
+def postOrder():
+    order = Order(
+        customer_id = current_user.id,
+        ebook_id = request.args.get('id_buku'),
+        harga=Ebook.query.filter_by(id=request.args.get('id_buku')).first().harga
+    )
+
+    try:
+        db.session.add(order)
+        db.session.commit()
+    except Exception as err:
+        return Response(f'{err}', status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    
+    return Response("Order successfully placed", status=HTTPStatus.OK)
+
 
 # Extras
 @app.route("/logout", methods=["GET"])

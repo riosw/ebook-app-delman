@@ -1,15 +1,18 @@
+from email.policy import default
 from . import db, login_manager
 
 from flask_login import UserMixin
 from sqlalchemy_utils import EmailType, PhoneNumberType, ChoiceType
 from enum import Enum
+from datetime import datetime
+
 
 class Ebook(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     judul = db.Column(db.Text())
     penulis = db.Column(db.Text())
     sinopsis = db.Column(db.Text())
-    harga = db.Column(db.Integer, nullable=False)
+    harga = db.Column(db.Integer)
     image_url = db.Column(db.Text())
     content_url = db.Column(db.Text())
 
@@ -21,9 +24,11 @@ class Ebook(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 class UserTypes(Enum):
     staff=1
     customer=2
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -36,3 +41,13 @@ class User(db.Model, UserMixin):
 
     def __repr__(self) -> str:
         return f'{self.name}, {self.email}, {self.role.value}'
+
+
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    customer = db.relationship("User", backref="orders")
+    customer_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    ebook = db.relationship("Ebook", backref="orders")
+    ebook_id = db.Column(db.Integer, db.ForeignKey("ebook.id"))
+    harga = db.Column(db.Integer, nullable=False)
+    order_date = db.Column(db.DateTime, default=datetime.utcnow())
