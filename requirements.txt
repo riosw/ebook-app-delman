@@ -3,3 +3,8 @@ Flask-SQLAlchemy
 psycopg2-binary
 flask_login
 flask_bcrypt
+flask-marshmallow
+marshmallow-SQLAlchemy
+SQLAlchemy_utils
+Flask-Migrate
+phonenumbers
