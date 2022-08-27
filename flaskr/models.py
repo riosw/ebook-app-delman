@@ -1,7 +1,8 @@
 from . import db, login_manager
 
 from flask_login import UserMixin
-from sqlalchemy_utils import EmailType, PhoneNumberType
+from sqlalchemy_utils import EmailType, PhoneNumberType, ChoiceType
+from enum import Enum
 
 class Ebook(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -15,18 +16,23 @@ class Ebook(db.Model):
     def __repr__(self) -> str:
         return f'Ebook<id={self.id},judul={self.judul}>'
 
-# tells the login manager on how to get the user
+# Tells the login manager on how to get the user
 @login_manager.user_loader
 def load_user(user_id):
-    return Staff.query.get(int(user_id))
+    return User.query.get(int(user_id))
 
-class Staff(db.Model, UserMixin):
+class UserTypes(Enum):
+    staff=1
+    customer=2
+
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text(), nullable=False)
     email = db.Column(EmailType, unique=True, nullable=False)
     phone_number = db.Column(PhoneNumberType, nullable=False)
     address = db.Column(db.Text(), nullable=False)
     password = db.Column(db.String(60), nullable=False)
+    role = db.Column(ChoiceType(UserTypes, impl=db.Integer()), nullable=False)
 
     def __repr__(self) -> str:
-        return f'{self.name}, {self.email}'
+        return f'{self.name}, {self.email}, {self.role.value}'

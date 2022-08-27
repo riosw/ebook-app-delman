@@ -8,3 +8,4 @@ marshmallow-SQLAlchemy
 SQLAlchemy_utils
 Flask-Migrate
 phonenumbers
+marshmallow_enum
