@@ -1,3 +1,4 @@
+werkzeug==2.0.3 # Required because test client throws TypeError: __init__() got an unexpected keyword argument 'as_tuple'
 Flask==2.0.1
 Flask-SQLAlchemy
 psycopg2-binary

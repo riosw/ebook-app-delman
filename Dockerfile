@@ -8,11 +8,11 @@ RUN pip3 install --upgrade pip
 
 RUN apk add build-base
 
-RUN pip3 install -r requirements.txt
-
 COPY . .
 
-ENV FLASK_APP=flaskr/app
+RUN pip3 install -e .
+
+ENV FLASK_APP=flaskr
 ENV FLASK_ENV=development
 
 ENV POSTGRES_USER=postgres

@@ -19,6 +19,7 @@ def hello_world():
 # Public ebook
 @main.route('/ebook', methods=["GET"])
 def getAllEbook():
+    return Ebook.query.first()
     return jsonify(EbookSchema(many=True).dump(Ebook.query.all()))
 
 @main.route("/ebook/<int:id>", methods=["GET"])
