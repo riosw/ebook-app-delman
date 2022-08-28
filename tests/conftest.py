@@ -1,7 +1,7 @@
 import pytest
 from flaskr import create_app, db
 
-@pytest.fixture()
+@pytest.fixture(scope='class')
 def app():
     app = create_app()
     app.config.update({
@@ -10,7 +10,8 @@ def app():
 
     db.init_app(app)
 
-    # setUp
+    # setup
+    print('$$ app fixture initiated')
     db.create_all()
 
     yield app
@@ -18,6 +19,10 @@ def app():
     # teardown
     db.drop_all()
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def client(app):
-    return app.test_client()
+    with app.test_client() as test_client:
+        with app.app_context():
+            # This is required to ensure all client usage uses the same app context
+            print('$$ client fixture initiated')
+            yield test_client

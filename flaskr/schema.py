@@ -12,6 +12,7 @@ class EbookSchema(ma.SQLAlchemyAutoSchema):
 class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
+        ordered = True
     
     role = EnumField(UserTypes, by_value=True)
 
