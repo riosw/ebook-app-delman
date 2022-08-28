@@ -1,27 +1,27 @@
-from . import create_app, bcrypt, db, login_manager
-from .models import Ebook, User, UserTypes, Order
-from .schema import EbookSchema, UserSchema, OrderSchema
+from .. import bcrypt, db, login_manager
+from ..models import Ebook, User, UserTypes, Order
+from ..schema import EbookSchema, UserSchema, OrderSchema
 
 from http import HTTPStatus
-from flask import Response, request, jsonify
+from flask import Response, request, jsonify, Blueprint
 from flask_login import login_user, current_user, login_required, logout_user
 from sqlalchemy.exc import IntegrityError
 from psycopg2.errors import UniqueViolation
 from typing import Optional
 from functools import wraps
 
-app = create_app()
+main = Blueprint('main', __name__)
 
-@app.route('/')
+@main.route('/')
 def hello_world():
     return 'Hello, World!'
 
 # Public ebook
-@app.route('/ebook', methods=["GET"])
+@main.route('/ebook', methods=["GET"])
 def getAllEbook():
     return jsonify(EbookSchema(many=True).dump(Ebook.query.all()))
 
-@app.route("/ebook/<int:id>", methods=["GET"])
+@main.route("/ebook/<int:id>", methods=["GET"])
 def getEbookWithID(id):
     return EbookSchema().dump(Ebook.query.filter_by(id=id).first())
 
@@ -98,11 +98,11 @@ def userRegister(userType: UserTypes) -> Response:
     
     return Response("Registration success", status=HTTPStatus.OK)
 
-@app.route("/admin/register", methods=["POST"])
+@main.route("/admin/register", methods=["POST"])
 def adminRegister():
     return userRegister(userType=UserTypes.staff)
 
-@app.route("/customer/register", methods=["POST"])
+@main.route("/customer/register", methods=["POST"])
 def customerRegister():
     return userRegister(userType=UserTypes.customer)
 
@@ -133,16 +133,16 @@ def userLogin(userType: UserTypes, returnUser: Optional[bool] = False) -> Respon
     else:
         return Response("Success", status=HTTPStatus.OK)
 
-@app.route("/admin/login", methods=["POST"])
+@main.route("/admin/login", methods=["POST"])
 def adminLogin():
     return userLogin(UserTypes.staff)
 
-@app.route("/customer/login", methods=["POST"])
+@main.route("/customer/login", methods=["POST"])
 def customerLogin():
     return userLogin(UserTypes.customer, returnUser=True)
 
 # Admin Ebooks Management
-@app.route("/admin/ebook", methods=["POST"])
+@main.route("/admin/ebook", methods=["POST"])
 @role_required(UserTypes.staff)
 def postEbookAsAdmin():
     ebook = Ebook(
@@ -158,17 +158,17 @@ def postEbookAsAdmin():
 
     return EbookSchema().dump(ebook)
 
-@app.route("/admin/ebook/<int:id>", methods=["GET"])
+@main.route("/admin/ebook/<int:id>", methods=["GET"])
 @role_required(UserTypes.staff)
 def getEbookWithIDAsAdmin(id):
     return getEbookWithID(id)
 
-@app.route("/admin/ebook", methods=["GET"])
+@main.route("/admin/ebook", methods=["GET"])
 @role_required(UserTypes.staff)
 def getAllEbookAsAdmin():
     return getAllEbook()
 
-@app.route("/admin/ebook/<int:id>", methods=["PUT"])
+@main.route("/admin/ebook/<int:id>", methods=["PUT"])
 @role_required(UserTypes.staff)
 def putEbookWithIDAsAdmin(id):
     ebook = Ebook.query.filter_by(id=id).first()
@@ -183,7 +183,7 @@ def putEbookWithIDAsAdmin(id):
 
     return EbookSchema().dump(ebook)
 
-@app.route("/admin/ebook/<int:id>", methods=["DELETE"])
+@main.route("/admin/ebook/<int:id>", methods=["DELETE"])
 @role_required(UserTypes.staff)
 def deleteEbookWithIDAsAdmin(id):
     ebook = Ebook.query.filter_by(id=id).first()
@@ -195,13 +195,13 @@ def deleteEbookWithIDAsAdmin(id):
     return Response(status=HTTPStatus.NOT_FOUND)
 
 # Customer Orders Management
-@app.route("/customer/orders", methods=["GET"])
+@main.route("/customer/orders", methods=["GET"])
 @role_required(UserTypes.customer)
 def getCustomerOrders():
     orders = Order.query.filter_by(customer_id=current_user.id).all()
     return jsonify(OrderSchema(many=True).dump(orders))
 
-@app.route("/order", methods=["POST"])
+@main.route("/order", methods=["POST"])
 @role_required(UserTypes.customer)
 def postOrder():
     order = Order(
@@ -220,13 +220,13 @@ def postOrder():
 
 
 # Extras
-@app.route("/logout", methods=["GET"])
+@main.route("/logout", methods=["GET"])
 @login_required
 def userLogout():
     logout_user()
     return Response('user logged out', status=HTTPStatus.OK)
 
-@app.route("/whoami", methods=["GET"])
+@main.route("/whoami", methods=["GET"])
 @login_required
 def userWhoami():
     return Response(str(current_user), status=HTTPStatus.OK)

@@ -14,7 +14,7 @@ ma = Marshmallow()
 migrate = Migrate()
 
 def create_app():
-    app = Flask('ebook-app')
+    app = Flask(__name__)
 
     # Configs
     app.config['SECRET_KEY'] = config.SECRET_KEY
@@ -30,4 +30,7 @@ def create_app():
     bcrypt.init_app(app)
     ma.init_app(app)
 
+    from flaskr.routes.main import main
+    app.register_blueprint(main)
+    
     return app
