@@ -1,5 +1,5 @@
 from flaskr.models import User, Ebook
-from flaskr.schema import EbookSchema, UserSchema
+from flaskr.schema import EbookSchema, UserSchema, OrderSchema
 from flaskr.schema import UserTypes
 from flask.testing import FlaskClient
 
@@ -120,8 +120,7 @@ class TestWithFixtures:
         self._test_login_user(client, UserTypes.customer, data_customer_A)
 
     def test_staff_ebook_management(self, client: FlaskClient):
-        """Assert admin login & ebook management functionalities
-        """
+        """Assert admin login & ebook management functionalities"""
         # Assert unauthorized access to /admin/ebook/* routes
         response: TestResponse = client.get("/admin/ebook")
         assert response.status_code == HTTPStatus.UNAUTHORIZED
@@ -177,6 +176,41 @@ class TestWithFixtures:
         assert response.status_code == HTTPStatus.OK
         ebook_A = Ebook.query.filter_by(id=data_ebook_A["id"]).first()
         assert not ebook_A
+
+    def test_customer_orders(self, client: FlaskClient):
+        # Setup Books
+        response = login_user(client, 
+            user_email=data_staff_A["email"], 
+            user_password=data_staff_A["password"],
+            user_type=UserTypes.staff)
+        assert response.status_code == HTTPStatus.OK
+
+        response: TestResponse = client.post("/admin/ebook", query_string=data_ebook_A)
+        ebook_A = Ebook.query.filter_by(judul=data_ebook_A["judul"]).first()
+        data_ebook_A["id"] = ebook_A.id
+        assert response.status_code == HTTPStatus.OK
+
+        response: TestResponse = client.get("/logout")
+        assert response.status_code == HTTPStatus.OK
+
+        # login customer
+        response = login_user(client, 
+            user_email=data_customer_A["email"], 
+            user_password=data_customer_A["password"],
+            user_type=UserTypes.customer)
+        assert response.status_code == HTTPStatus.OK
+
+        # assert place order 
+        response = client.post("/order", query_string={"id_buku": ebook_A.id})
+        assert response.status_code == HTTPStatus.OK
+
+        # assert order exists
+        response = client.get("/customer/orders")
+        assert response.status_code == HTTPStatus.OK
+        order = OrderSchema().load(response.get_json()[0]) # The response is a list of orders
+        assert order.get('harga') == ebook_A.harga
+        assert order.get('ebook') == data_ebook_A
+
 
 def get_route(user_type: UserTypes):
     if user_type == UserTypes.staff:

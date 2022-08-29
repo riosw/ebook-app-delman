@@ -6,7 +6,6 @@ from sqlalchemy_utils import EmailType, PhoneNumberType, ChoiceType
 from enum import Enum
 from datetime import datetime
 
-
 class Ebook(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     judul = db.Column(db.Text())
@@ -50,4 +49,4 @@ class Order(db.Model):
     ebook = db.relationship("Ebook", backref="orders")
     ebook_id = db.Column(db.Integer, db.ForeignKey("ebook.id"))
     harga = db.Column(db.Integer, nullable=False)
-    order_date = db.Column(db.DateTime, default=datetime.utcnow())
+    order_date = db.Column(db.DateTime, default=datetime.utcnow)
