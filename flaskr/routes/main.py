@@ -131,7 +131,7 @@ def userLogin(userType: UserTypes, returnUser: Optional[bool] = False) -> Respon
     if returnUser:
         return UserSchema(exclude=['id','password', 'role']).dump(user)
     else:
-        return Response("Success", status=HTTPStatus.OK)
+        return Response("Login success", status=HTTPStatus.OK)
 
 @main.route("/admin/login", methods=["POST"])
 def adminLogin():
