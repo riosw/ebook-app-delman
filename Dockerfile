@@ -17,7 +17,7 @@ ENV FLASK_ENV=development
 
 ENV POSTGRES_USER=postgres
 ENV POSTGRES_PASSWORD=postgres
-ENV POSTGRES_HOST=ebook-app_psql-db_1
+ENV POSTGRES_HOST=ebook-app-delman-psql-db-1
 ENV POSTGRES_PORT=5432
 
 
